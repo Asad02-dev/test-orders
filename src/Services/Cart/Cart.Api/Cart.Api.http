@@ -1,6 +1,11 @@
 @Cart.Api_HostAddress = http://localhost:5174
 
-GET {{Cart.Api_HostAddress}}/weatherforecast/
+GET {{Cart.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{Cart.Api_HostAddress}}/api/cart
 Accept: application/json
 
 ###

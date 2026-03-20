@@ -82,7 +82,7 @@ public class Order : AggregateRoot<Guid>
 
     public void Cancel(string reason)
     {
-        if (Status is OrderStatus.Confirmed or OrderStatus.Shipped)
+        if (Status is OrderStatus.Confirmed or OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Failed)
             throw new InvalidOperationException($"Cannot cancel order in {Status} status.");
         Status = OrderStatus.Cancelled;
         CancellationReason = reason;
