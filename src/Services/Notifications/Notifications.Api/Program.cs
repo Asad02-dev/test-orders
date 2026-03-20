@@ -1,41 +1,29 @@
+using Authentication.Extensions;
+using Notifications.Infrastructure.Extensions;
+using Observability.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.AddObservability("notifications-api");
 builder.Services.AddOpenApi();
+builder.Services.AddKeycloakAuthentication(builder.Configuration);
+builder.Services.AddNotificationsInfrastructure(builder.Configuration);
+builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseRequestLogging();
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapHealthChecks("/health");
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapGet("/api/notifications/status", () => Results.Ok(new { Status = "Online", Service = "Notifications" }))
+   .WithTags("Notifications").WithName("GetNotificationsStatus");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

@@ -1,41 +1,36 @@
+using Authentication.Extensions;
+using Observability.Extensions;
+using Payments.Application.Services;
+using Payments.Infrastructure.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.AddObservability("payments-api");
 builder.Services.AddOpenApi();
+builder.Services.AddKeycloakAuthentication(builder.Configuration);
+builder.Services.AddPaymentsInfrastructure(builder.Configuration);
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<Payments.Infrastructure.Persistence.PaymentsDbContext>("payments-db");
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseRequestLogging();
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapHealthChecks("/health");
 
-app.MapGet("/weatherforecast", () =>
+var paymentsGroup = app.MapGroup("/api/payments").WithTags("Payments").RequireAuthorization();
+
+paymentsGroup.MapGet("/orders/{orderId:guid}", async (Guid orderId, PaymentService svc, CancellationToken ct) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var payment = await svc.GetByOrderIdAsync(orderId, ct);
+    return payment is null ? Results.NotFound() : Results.Ok(payment);
+}).WithName("GetPaymentByOrderId");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
