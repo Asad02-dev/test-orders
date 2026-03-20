@@ -13,4 +13,9 @@
     <PackageReference Include="Yarp.ReverseProxy" Version="2.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\Authentication\Authentication.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\Observability\Observability.csproj" />
+  </ItemGroup>
+
 </Project>
