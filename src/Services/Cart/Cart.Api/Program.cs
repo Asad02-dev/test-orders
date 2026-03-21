@@ -1,10 +1,10 @@
-using Authentication.Extensions;
 using Cart.Application.DTOs;
 using Cart.Application.Services;
 using Cart.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Observability.Extensions;
 using System.Security.Claims;
+using Authentication.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +17,9 @@ builder.Services.AddHealthChecks()
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+// Ensure schema exists on startup
+await app.Services.EnsureDatabaseCreatedAsync();
 
 app.UseRequestLogging();
 app.UseExceptionHandler();

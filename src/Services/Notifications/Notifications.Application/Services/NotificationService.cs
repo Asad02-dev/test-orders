@@ -1,13 +1,17 @@
 using Microsoft.Extensions.Logging;
+using Notifications.Application.Models;
+using Notifications.Application.Repositories;
 
 namespace Notifications.Application.Services;
 
 public class NotificationService
 {
+    private readonly INotificationRepository _notificationRepository;
     private readonly ILogger<NotificationService> _logger;
 
-    public NotificationService(ILogger<NotificationService> logger)
+    public NotificationService(INotificationRepository notificationRepository, ILogger<NotificationService> logger)
     {
+        _notificationRepository = notificationRepository;
         _logger = logger;
     }
 
@@ -17,9 +21,21 @@ public class NotificationService
             "Sending order confirmation to {Email} for order {OrderId} (amount: {Amount})",
             email, orderId, amount);
 
-        // TODO: Integrate with real email provider (SendGrid, SMTP, etc.)
-        await Task.Delay(10, ct);
-        _logger.LogInformation("Order confirmation sent to {Email}", email);
+        var log = new NotificationLog
+        {
+            Type = "OrderConfirmation",
+            OrderId = orderId,
+            Recipient = email,
+            Subject = $"Order #{orderId} Confirmed",
+            Body = $"Dear {name}, your order #{orderId} for {amount:C} has been confirmed.",
+            Sent = true,
+            SentAt = DateTime.UtcNow
+        };
+
+        await _notificationRepository.AddAsync(log, ct);
+        await _notificationRepository.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Order confirmation logged for {Email} (order {OrderId})", email, orderId);
     }
 
     public async Task SendOrderCancelledAsync(Guid orderId, string email, string reason, CancellationToken ct)
@@ -28,7 +44,26 @@ public class NotificationService
             "Sending order cancellation notification to {Email} for order {OrderId}",
             email, orderId);
 
-        await Task.Delay(10, ct);
-        _logger.LogInformation("Order cancellation notification sent to {Email}", email);
+        var log = new NotificationLog
+        {
+            Type = "OrderCancelled",
+            OrderId = orderId,
+            Recipient = email,
+            Subject = $"Order #{orderId} Cancelled",
+            Body = $"Your order #{orderId} has been cancelled. Reason: {reason}",
+            Sent = true,
+            SentAt = DateTime.UtcNow
+        };
+
+        await _notificationRepository.AddAsync(log, ct);
+        await _notificationRepository.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Order cancellation notification logged for {Email} (order {OrderId})", email, orderId);
     }
+
+    public async Task<IReadOnlyList<NotificationLog>> GetByOrderIdAsync(Guid orderId, CancellationToken ct)
+        => await _notificationRepository.GetByOrderIdAsync(orderId, ct);
+
+    public async Task<IReadOnlyList<NotificationLog>> GetRecentAsync(int count, CancellationToken ct)
+        => await _notificationRepository.GetRecentAsync(count, ct);
 }

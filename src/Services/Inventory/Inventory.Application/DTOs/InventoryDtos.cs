@@ -22,6 +22,8 @@ public record RestockRequest(int Quantity);
 
 public record ReservationRequest(
     Guid OrderId,
+    Guid CustomerId,
+    decimal TotalAmount,
     List<ReservationItemRequest> Items
 );
 

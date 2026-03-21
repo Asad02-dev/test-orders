@@ -21,6 +21,7 @@ public class OrdersDbContext : DbContext, IUnitOfWork
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.CustomerEmail).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.CustomerName).HasMaxLength(200);
             entity.Property(e => e.IdempotencyKey).IsRequired().HasMaxLength(200);
             entity.HasIndex(e => e.IdempotencyKey).IsUnique();
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");

@@ -97,6 +97,8 @@ public class InventoryService
         await _publishEndpoint.Publish(new InventoryReservedEvent
         {
             OrderId = request.OrderId,
+            CustomerId = request.CustomerId,
+            TotalAmount = request.TotalAmount,
             Items = request.Items.Select(i => new ReservedItemDto
             {
                 ProductId = i.ProductId,

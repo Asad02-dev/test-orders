@@ -21,4 +21,11 @@ public static class InfrastructureExtensions
 
         return services;
     }
+
+    public static async Task EnsureDatabaseCreatedAsync(this IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CartDbContext>();
+        await context.Database.EnsureCreatedAsync();
+    }
 }

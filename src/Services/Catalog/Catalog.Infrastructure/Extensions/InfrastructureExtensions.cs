@@ -23,6 +23,13 @@ public static class InfrastructureExtensions
         return services;
     }
 
+    public static async Task EnsureDatabaseCreatedAsync(this IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+        await context.Database.EnsureCreatedAsync();
+    }
+
     public static async Task MigrateDatabaseAsync(this IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();

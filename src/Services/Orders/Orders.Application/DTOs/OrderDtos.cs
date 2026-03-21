@@ -6,6 +6,7 @@ public record OrderDto(
     Guid Id,
     Guid CustomerId,
     string CustomerEmail,
+    string CustomerName,
     OrderStatus Status,
     string StatusName,
     decimal TotalAmount,
@@ -25,6 +26,7 @@ public record OrderItemDto(
 
 public record PlaceOrderRequest(
     string CustomerEmail,
+    string CustomerName,
     List<PlaceOrderItemRequest> Items,
     string IdempotencyKey
 );

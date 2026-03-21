@@ -18,6 +18,9 @@ builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
+// Ensure schema exists on startup
+await app.Services.EnsureDatabaseCreatedAsync();
+
 app.UseRequestLogging();
 app.UseExceptionHandler();
 app.UseStatusCodePages();

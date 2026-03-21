@@ -33,6 +33,16 @@ tests/
 docs/architecture/
 ```
 
+## Phase 2 — Checkout Flow (Implemented)
+
+This phase completes the end-to-end checkout event chain:
+
+1. **Orders** — Place order → persists to DB → publishes `OrderPlacedEvent`
+2. **Inventory** — Consumes `OrderPlacedEvent` → attempts stock reservation → publishes `InventoryReservedEvent` or `InventoryReservationFailedEvent`
+3. **Payments** — Consumes `InventoryReservedEvent` → simulates payment authorization → publishes `PaymentAuthorizedEvent` or `PaymentFailedEvent`
+4. **Orders** — Consumes `InventoryReservedEvent` (→ ReservationConfirmed), `PaymentAuthorizedEvent` (→ Confirmed + sends notification), `PaymentFailedEvent` (→ Cancelled + sends notification), `InventoryReservationFailedEvent` (→ Cancelled + sends notification)
+5. **Notifications** — Consumes `SendOrderConfirmationNotificationCommand` and `SendOrderCancelledNotificationCommand` → logs and persists notification records
+
 ## Local Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
@@ -50,7 +60,20 @@ docs/architecture/
 
 ## PostgreSQL Setup
 
-Create one database per service (or use schemas within one database):
+Each service uses its own database schema within a single PostgreSQL instance. Schemas are created automatically on first startup via `EnsureCreated()`.
+
+Default credentials: `postgres` / `postgres` on `localhost:5432`.
+
+| Service       | Database                  |
+|---------------|---------------------------|
+| Catalog       | ecommerce_catalog         |
+| Cart          | ecommerce_cart            |
+| Orders        | ecommerce_orders          |
+| Inventory     | ecommerce_inventory       |
+| Payments      | ecommerce_payments        |
+| Notifications | ecommerce_notifications   |
+
+Create these databases before first run:
 
 ```sql
 CREATE DATABASE ecommerce_catalog;
@@ -58,9 +81,8 @@ CREATE DATABASE ecommerce_cart;
 CREATE DATABASE ecommerce_orders;
 CREATE DATABASE ecommerce_inventory;
 CREATE DATABASE ecommerce_payments;
+CREATE DATABASE ecommerce_notifications;
 ```
-
-Default credentials: `postgres` / `postgres` on `localhost:5432`. Update `appsettings.json` per service as needed.
 
 ## RabbitMQ Setup
 
@@ -90,12 +112,50 @@ Access OpenAPI docs per service at `http://localhost:{port}/openapi`.
 | Event | Publisher | Consumers |
 |-------|-----------|-----------|
 | `OrderPlacedEvent` | Orders | Inventory |
-| `InventoryReservedEvent` | Inventory | Payments |
+| `InventoryReservedEvent` | Inventory | Payments, Orders |
 | `InventoryReservationFailedEvent` | Inventory | Orders |
 | `PaymentAuthorizedEvent` | Payments | Orders |
 | `PaymentFailedEvent` | Payments | Orders |
+| `OrderConfirmedEvent` | Orders | — |
+| `OrderCancelledEvent` | Orders | — |
 | `SendOrderConfirmationNotificationCommand` | Orders | Notifications |
 | `SendOrderCancelledNotificationCommand` | Orders | Notifications |
+
+## Service Endpoints
+
+### Catalog (`/api/products`)
+- `GET /api/products` — list products (paginated, filterable by category)
+- `GET /api/products/{id}` — get product by ID
+- `POST /api/products` — create product [auth]
+- `PUT /api/products/{id}` — update product [auth]
+- `DELETE /api/products/{id}` — deactivate product [auth]
+
+### Cart (`/api/cart`)
+- `GET /api/cart` — get or create cart for current user [auth]
+- `POST /api/cart/items` — add item to cart [auth]
+- `PUT /api/cart/items` — update item quantity [auth]
+- `DELETE /api/cart/items/{productId}` — remove item [auth]
+- `DELETE /api/cart` — clear cart [auth]
+
+### Orders (`/api/orders`)
+- `GET /api/orders` — list orders for current user (paginated) [auth]
+- `GET /api/orders/{id}` — get order by ID [auth]
+- `POST /api/orders` — place order (idempotent via `IdempotencyKey`) [auth]
+- `POST /api/orders/{id}/cancel` — cancel order [auth]
+
+### Inventory (`/api/inventory`)
+- `GET /api/inventory/products/{productId}` — get stock level
+- `GET /api/inventory/low-stock` — get low-stock items [auth]
+- `POST /api/inventory` — create inventory item [auth]
+- `POST /api/inventory/products/{productId}/restock` — restock [auth]
+
+### Payments (`/api/payments`)
+- `GET /api/payments/orders/{orderId}` — get payment status for order [auth]
+
+### Notifications (`/api/notifications`)
+- `GET /api/notifications/status` — service health status
+- `GET /api/notifications` — list recent notification logs [auth]
+- `GET /api/notifications/orders/{orderId}` — notification history for order [auth]
 
 ## Health Checks
 
