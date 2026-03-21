@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Persistence.Outbox;
 
 namespace Persistence.Extensions;
 
@@ -35,6 +36,13 @@ public static class PersistenceExtensions
         services.AddDbContext<TContext>(options =>
             options.UseInMemoryDatabase(databaseName));
 
+        return services;
+    }
+
+    public static IServiceCollection AddOutboxWorker<TContext>(this IServiceCollection services)
+        where TContext : DbContext
+    {
+        services.AddHostedService<OutboxWorker<TContext>>();
         return services;
     }
 }

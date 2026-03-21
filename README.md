@@ -9,6 +9,7 @@ A production-oriented API-first e-commerce platform built with .NET 10, followin
 - **PostgreSQL**: Single database engine (separate schema per service)
 - **RabbitMQ + MassTransit**: Async event-driven messaging between services
 - **Serilog + OpenTelemetry**: Structured logging and distributed tracing
+- **Correlation ID**: `X-Correlation-Id` header propagated through all services
 
 ## Solution Structure
 
@@ -16,12 +17,12 @@ A production-oriented API-first e-commerce platform built with .NET 10, followin
 src/
   Gateway/Gateway.Api             # YARP reverse proxy (port 5100)
   BuildingBlocks/
-    SharedKernel                  # Domain primitives: Entity, AggregateRoot, Result, ValueObject
+    SharedKernel                  # Domain primitives: Entity, AggregateRoot, Result, ValueObject, CorrelationContext
     Contracts                     # Integration event contracts shared across services
     Messaging                     # MassTransit/RabbitMQ wiring
-    Persistence                   # EF Core + Npgsql helpers, OutboxMessage
+    Persistence                   # EF Core + Npgsql helpers, OutboxMessage, OutboxWorker
     Authentication                # Keycloak JWT bearer extension
-    Observability                 # Serilog + OpenTelemetry extension
+    Observability                 # Serilog + OpenTelemetry + CorrelationIdMiddleware
   Services/
     Catalog/   (Api:5101, Application, Domain, Infrastructure)
     Cart/      (Api:5102, Application, Domain, Infrastructure)
@@ -29,19 +30,33 @@ src/
     Inventory/ (Api:5104, Application, Domain, Infrastructure)
     Payments/  (Api:5105, Application, Domain, Infrastructure)
     Notifications/ (Api:5106, Application, Infrastructure)
-tests/
-docs/architecture/
+docs/
+  architecture/   # OVERVIEW.md
+  services/       # Per-service docs (CART, ORDERS, INVENTORY, PAYMENTS, NOTIFICATIONS, CATALOG, GATEWAY)
+  TODO.md         # Phase progress and future work
 ```
 
-## Phase 2 — Checkout Flow (Implemented)
+## Phase 3 — Hardening (This PR — Implemented)
 
-This phase completes the end-to-end checkout event chain:
+This phase completes the remaining high-value items from the approved plan:
+
+1. **Inventory commit on `OrderConfirmedEvent`** — `QuantityOnHand` is reduced when an order is confirmed
+2. **Inventory release on `OrderCancelledEvent`** — reserved stock is returned when an order is cancelled
+3. **Payment capture on `OrderConfirmedEvent`** — payment transitions from `Authorized` → `Captured`
+4. **`OrderConfirmedEvent` and `OrderCancelledEvent` carry items list** — downstream services know which products were affected
+5. **Cart checkout endpoint** (`POST /api/cart/checkout`) — converts cart to an order via service call to Orders API, then clears the cart
+6. **Correlation ID middleware** — `X-Correlation-Id` propagated through all requests and logged
+7. **Outbox background worker** (`OutboxWorker<TContext>`) — polls `OutboxMessages` table every 10 s; re-publishes unprocessed messages (at-least-once delivery)
+8. **Per-service documentation** — `docs/services/` with endpoint tables, state machines, and roadmap per service
+9. **Updated architecture docs and TODO tracker**
+
+## Phase 2 — Checkout Flow (Previously Implemented)
 
 1. **Orders** — Place order → persists to DB → publishes `OrderPlacedEvent`
 2. **Inventory** — Consumes `OrderPlacedEvent` → attempts stock reservation → publishes `InventoryReservedEvent` or `InventoryReservationFailedEvent`
 3. **Payments** — Consumes `InventoryReservedEvent` → simulates payment authorization → publishes `PaymentAuthorizedEvent` or `PaymentFailedEvent`
-4. **Orders** — Consumes `InventoryReservedEvent` (→ ReservationConfirmed), `PaymentAuthorizedEvent` (→ Confirmed + sends notification), `PaymentFailedEvent` (→ Cancelled + sends notification), `InventoryReservationFailedEvent` (→ Cancelled + sends notification)
-5. **Notifications** — Consumes `SendOrderConfirmationNotificationCommand` and `SendOrderCancelledNotificationCommand` → logs and persists notification records
+4. **Orders** — Consumes inventory/payment events → advances order state machine
+5. **Notifications** — Consumes notification commands → logs to PostgreSQL
 
 ## Local Prerequisites
 
@@ -107,6 +122,32 @@ dotnet run --project src/Services/Notifications/Notifications.Api
 
 Access OpenAPI docs per service at `http://localhost:{port}/openapi`.
 
+## Sample End-to-End Checkout (Local)
+
+1. Authenticate with Keycloak and obtain a JWT bearer token.
+2. Add products to the catalog:
+   ```
+   POST /api/products  { "name": "Widget", "price": 29.99, "category": "Tools" }
+   ```
+3. Create inventory for the product:
+   ```
+   POST /api/inventory  { "productId": "...", "productName": "Widget", "quantity": 100 }
+   ```
+4. Add items to the cart:
+   ```
+   POST /api/cart/items  { "productId": "...", "productName": "Widget", "unitPrice": 29.99, "quantity": 2 }
+   ```
+5. Checkout from the cart:
+   ```
+   POST /api/cart/checkout  { "customerEmail": "me@example.com", "customerName": "Jane", "idempotencyKey": "unique-uuid" }
+   ```
+6. Observe the event chain in the logs and check order/payment/notification status:
+   ```
+   GET /api/orders/{orderId}
+   GET /api/payments/orders/{orderId}
+   GET /api/notifications/orders/{orderId}
+   ```
+
 ## Integration Events
 
 | Event | Publisher | Consumers |
@@ -116,12 +157,12 @@ Access OpenAPI docs per service at `http://localhost:{port}/openapi`.
 | `InventoryReservationFailedEvent` | Inventory | Orders |
 | `PaymentAuthorizedEvent` | Payments | Orders |
 | `PaymentFailedEvent` | Payments | Orders |
-| `OrderConfirmedEvent` | Orders | — |
-| `OrderCancelledEvent` | Orders | — |
+| `OrderConfirmedEvent` (with items) | Orders | Inventory (commit), Payments (capture) |
+| `OrderCancelledEvent` (with items) | Orders | Inventory (release) |
 | `SendOrderConfirmationNotificationCommand` | Orders | Notifications |
 | `SendOrderCancelledNotificationCommand` | Orders | Notifications |
 
-## Service Endpoints
+## Service Endpoints Summary
 
 ### Catalog (`/api/products`)
 - `GET /api/products` — list products (paginated, filterable by category)
@@ -136,6 +177,7 @@ Access OpenAPI docs per service at `http://localhost:{port}/openapi`.
 - `PUT /api/cart/items` — update item quantity [auth]
 - `DELETE /api/cart/items/{productId}` — remove item [auth]
 - `DELETE /api/cart` — clear cart [auth]
+- `POST /api/cart/checkout` — **checkout: convert cart to order and clear** [auth]
 
 ### Orders (`/api/orders`)
 - `GET /api/orders` — list orders for current user (paginated) [auth]
@@ -163,4 +205,6 @@ Each service exposes `GET /health`. The gateway exposes `GET /health`.
 
 ## Docs
 
-See [`docs/architecture/`](docs/architecture/) for detailed architecture, service responsibilities, and roadmap.
+See [`docs/architecture/OVERVIEW.md`](docs/architecture/OVERVIEW.md) for detailed architecture and event flows.  
+See [`docs/services/`](docs/services/) for per-service documentation.  
+See [`docs/TODO.md`](docs/TODO.md) for phase progress and future work.

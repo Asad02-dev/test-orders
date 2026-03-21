@@ -20,6 +20,7 @@ public static class InfrastructureExtensions
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<PaymentsDbContext>());
         services.AddScoped<PaymentService>();
         services.AddRabbitMqMessagingWithConsumers(configuration, typeof(InventoryReservedConsumer).Assembly);
+        services.AddOutboxWorker<PaymentsDbContext>();
         return services;
     }
 

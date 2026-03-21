@@ -22,6 +22,7 @@ var app = builder.Build();
 await app.Services.EnsureDatabaseCreatedAsync();
 
 app.UseRequestLogging();
+app.UseCorrelationId();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
@@ -94,6 +95,20 @@ cartGroup.MapDelete("/", async (ClaimsPrincipal user, CartService cartService, C
 })
 .WithName("ClearCart")
 .WithSummary("Clear all items from the cart");
+
+cartGroup.MapPost("/checkout", async (
+    [FromBody] CartCheckoutRequest request,
+    ClaimsPrincipal user,
+    CartCheckoutService checkoutService,
+    CancellationToken ct) =>
+{
+    var customerId = GetCustomerId(user);
+    var result = await checkoutService.CheckoutAsync(customerId, request, ct);
+    if (result.IsFailure) return Results.Problem(result.Error, statusCode: 400);
+    return Results.Ok(result.Value);
+})
+.WithName("CheckoutCart")
+.WithSummary("Checkout: convert cart to an order and clear the cart");
 
 app.Run();
 

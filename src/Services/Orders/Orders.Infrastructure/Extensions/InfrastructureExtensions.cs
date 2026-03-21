@@ -21,6 +21,7 @@ public static class InfrastructureExtensions
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<OrdersDbContext>());
         services.AddScoped<OrderService>();
         services.AddRabbitMqMessagingWithConsumers(configuration, typeof(InventoryReservedConsumer).Assembly);
+        services.AddOutboxWorker<OrdersDbContext>();
 
         return services;
     }

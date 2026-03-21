@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Observability.Middleware;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Events;
+using SharedKernel.Common;
 
 namespace Observability.Extensions;
 
@@ -23,7 +25,7 @@ public static class ObservabilityExtensions
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("ServiceName", serviceName)
                 .WriteTo.Console(outputTemplate:
-                    "[{Timestamp:HH:mm:ss} {Level:u3}] {ServiceName} {Message:lj}{NewLine}{Exception}");
+                    "[{Timestamp:HH:mm:ss} {Level:u3}] {ServiceName} {CorrelationId} {Message:lj}{NewLine}{Exception}");
 
             if (ctx.HostingEnvironment.IsProduction())
             {
@@ -46,6 +48,9 @@ public static class ObservabilityExtensions
                     .AddHttpClientInstrumentation();
             });
 
+        // Register CorrelationContext as scoped so it is available per request
+        builder.Services.AddScoped<CorrelationContext>();
+
         return builder;
     }
 
@@ -56,5 +61,10 @@ public static class ObservabilityExtensions
             options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.####}ms";
         });
         return app;
+    }
+
+    public static IApplicationBuilder UseCorrelationId(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<CorrelationIdMiddleware>();
     }
 }

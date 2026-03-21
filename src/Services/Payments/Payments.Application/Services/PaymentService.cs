@@ -67,6 +67,15 @@ public class PaymentService
         }
     }
 
+    public async Task CapturePaymentAsync(Guid orderId, CancellationToken ct)
+    {
+        var payment = await _paymentRepository.GetByOrderIdAsync(orderId, ct);
+        if (payment is null || payment.Status != Payments.Domain.Enums.PaymentStatus.Authorized) return;
+
+        payment.Capture();
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
     private static bool SimulatePaymentAuthorization(decimal amount)
     {
         // Simple simulation: fail payments > 10000 for testing
