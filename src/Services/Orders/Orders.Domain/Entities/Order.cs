@@ -10,6 +10,7 @@ public class Order : AggregateRoot<Guid>
 
     public Guid CustomerId { get; private set; }
     public string CustomerEmail { get; private set; } = string.Empty;
+    public string CustomerName { get; private set; } = string.Empty;
     public OrderStatus Status { get; private set; }
     public decimal TotalAmount { get; private set; }
     public string IdempotencyKey { get; private set; } = string.Empty;
@@ -23,6 +24,7 @@ public class Order : AggregateRoot<Guid>
     public static Order Create(
         Guid customerId,
         string customerEmail,
+        string customerName,
         List<(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity)> items,
         string idempotencyKey)
     {
@@ -35,6 +37,7 @@ public class Order : AggregateRoot<Guid>
             Id = Guid.NewGuid(),
             CustomerId = customerId,
             CustomerEmail = customerEmail,
+            CustomerName = string.IsNullOrWhiteSpace(customerName) ? customerEmail : customerName,
             Status = OrderStatus.Pending,
             IdempotencyKey = idempotencyKey,
             CreatedAt = DateTime.UtcNow,
@@ -48,7 +51,7 @@ public class Order : AggregateRoot<Guid>
 
         order.TotalAmount = order._items.Sum(i => i.TotalPrice);
 
-        order.AddDomainEvent(new OrderCreatedDomainEvent(order.Id, customerId, customerEmail, order.TotalAmount));
+        order.AddDomainEvent(new OrderCreatedDomainEvent(order.Id, customerId, customerEmail, customerName, order.TotalAmount));
 
         return order;
     }

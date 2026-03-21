@@ -1,7 +1,9 @@
+using Contracts.Events.Notification;
 using Contracts.Events.Order;
 using MassTransit;
 using Orders.Application.DTOs;
 using Orders.Domain.Entities;
+using Orders.Domain.Enums;
 using Orders.Domain.Repositories;
 using SharedKernel.Common;
 using SharedKernel.Interfaces;
@@ -50,7 +52,7 @@ public class OrderService
             return Result.Success(MapToDto(existing));
 
         var items = request.Items.Select(i => (i.ProductId, i.ProductName, i.UnitPrice, i.Quantity)).ToList();
-        var order = Order.Create(customerId, request.CustomerEmail, items, request.IdempotencyKey);
+        var order = Order.Create(customerId, request.CustomerEmail, request.CustomerName, items, request.IdempotencyKey);
 
         await _orderRepository.AddAsync(order, ct);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -90,11 +92,96 @@ public class OrderService
             Reason = reason
         });
 
+        await _publishEndpoint.Publish(new SendOrderCancelledNotificationCommand
+        {
+            OrderId = order.Id,
+            CustomerEmail = order.CustomerEmail,
+            Reason = reason
+        });
+
         return Result.Success();
     }
 
+    public async Task HandleInventoryReservedAsync(Guid orderId, CancellationToken ct)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null || order.Status != OrderStatus.Pending) return;
+
+        order.ConfirmReservation();
+        _orderRepository.Update(order);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task HandleInventoryReservationFailedAsync(Guid orderId, string reason, CancellationToken ct)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null || order.Status == OrderStatus.Cancelled) return;
+
+        order.Cancel(reason);
+        _orderRepository.Update(order);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        await _publishEndpoint.Publish(new SendOrderCancelledNotificationCommand
+        {
+            OrderId = order.Id,
+            CustomerEmail = order.CustomerEmail,
+            Reason = reason
+        });
+    }
+
+    public async Task HandlePaymentAuthorizedAsync(Guid orderId, Guid paymentId, decimal amount, CancellationToken ct)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null) return;
+
+        // Idempotent: already confirmed
+        if (order.Status == OrderStatus.Confirmed) return;
+
+        // Advance through state machine gracefully, handling out-of-order events
+        if (order.Status == OrderStatus.Pending)
+            order.ConfirmReservation();
+        if (order.Status == OrderStatus.ReservationConfirmed)
+            order.AuthorizePayment();
+        if (order.Status == OrderStatus.PaymentAuthorized)
+            order.Confirm();
+
+        _orderRepository.Update(order);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        await _publishEndpoint.Publish(new OrderConfirmedEvent
+        {
+            OrderId = order.Id,
+            CustomerId = order.CustomerId
+        });
+
+        await _publishEndpoint.Publish(new SendOrderConfirmationNotificationCommand
+        {
+            OrderId = order.Id,
+            CustomerEmail = order.CustomerEmail,
+            CustomerName = order.CustomerName,
+            TotalAmount = order.TotalAmount
+        });
+    }
+
+    public async Task HandlePaymentFailedAsync(Guid orderId, string reason, CancellationToken ct)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null || order.Status == OrderStatus.Cancelled) return;
+
+        order.Cancel(reason);
+        _orderRepository.Update(order);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        await _publishEndpoint.Publish(new SendOrderCancelledNotificationCommand
+        {
+            OrderId = order.Id,
+            CustomerEmail = order.CustomerEmail,
+            Reason = reason
+        });
+    }
+
     private static OrderDto MapToDto(Order o) => new(
-        o.Id, o.CustomerId, o.CustomerEmail, o.Status, o.Status.ToString(),
+        o.Id, o.CustomerId, o.CustomerEmail, o.CustomerName, o.Status, o.Status.ToString(),
         o.TotalAmount,
         o.Items.Select(i => new AppOrderItemDto(i.ProductId, i.ProductName, i.UnitPrice, i.Quantity, i.TotalPrice)).ToList(),
         o.CreatedAt, o.UpdatedAt, o.CancellationReason

@@ -28,6 +28,9 @@ builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
+// Ensure schema exists on startup (creates tables + seed data if not present)
+await app.Services.EnsureDatabaseCreatedAsync();
+
 app.UseRequestLogging();
 app.UseExceptionHandler();
 app.UseStatusCodePages();

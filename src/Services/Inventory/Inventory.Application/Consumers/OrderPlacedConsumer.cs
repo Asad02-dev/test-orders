@@ -24,6 +24,8 @@ public class OrderPlacedConsumer : IConsumer<OrderPlacedEvent>
 
         var request = new ReservationRequest(
             evt.OrderId,
+            evt.CustomerId,
+            evt.TotalAmount,
             evt.Items.Select(i => new ReservationItemRequest(i.ProductId, i.Quantity)).ToList()
         );
 

@@ -22,4 +22,11 @@ public static class InfrastructureExtensions
         services.AddRabbitMqMessagingWithConsumers(configuration, typeof(InventoryReservedConsumer).Assembly);
         return services;
     }
+
+    public static async Task EnsureDatabaseCreatedAsync(this IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<PaymentsDbContext>();
+        await context.Database.EnsureCreatedAsync();
+    }
 }
