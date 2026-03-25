@@ -19,6 +19,13 @@ public static class InfrastructureExtensions
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CartDbContext>());
         services.AddScoped<CartService>();
 
+        var ordersBaseAddress = configuration["Services:OrdersApi"]
+            ?? "http://localhost:5103";
+        services.AddHttpClient<CartCheckoutService>(client =>
+        {
+            client.BaseAddress = new Uri(ordersBaseAddress);
+        });
+
         return services;
     }
 

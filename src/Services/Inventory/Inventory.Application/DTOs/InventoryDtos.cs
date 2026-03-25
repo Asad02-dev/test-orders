@@ -28,3 +28,8 @@ public record ReservationRequest(
 );
 
 public record ReservationItemRequest(Guid ProductId, int Quantity);
+
+public record CommitReservationItemRequest(Guid ProductId, int Quantity);
+
+public record ReleaseReservationItemRequest(Guid ProductId, int Quantity);
+

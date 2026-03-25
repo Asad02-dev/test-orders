@@ -89,7 +89,14 @@ public class OrderService
         {
             OrderId = order.Id,
             CustomerId = order.CustomerId,
-            Reason = reason
+            Reason = reason,
+            Items = order.Items.Select(i => new ContractOrderItemDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice
+            }).ToList()
         });
 
         await _publishEndpoint.Publish(new SendOrderCancelledNotificationCommand
@@ -121,6 +128,20 @@ public class OrderService
         _orderRepository.Update(order);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        await _publishEndpoint.Publish(new OrderCancelledEvent
+        {
+            OrderId = order.Id,
+            CustomerId = order.CustomerId,
+            Reason = reason,
+            Items = order.Items.Select(i => new ContractOrderItemDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice
+            }).ToList()
+        });
+
         await _publishEndpoint.Publish(new SendOrderCancelledNotificationCommand
         {
             OrderId = order.Id,
@@ -151,7 +172,14 @@ public class OrderService
         await _publishEndpoint.Publish(new OrderConfirmedEvent
         {
             OrderId = order.Id,
-            CustomerId = order.CustomerId
+            CustomerId = order.CustomerId,
+            Items = order.Items.Select(i => new ContractOrderItemDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice
+            }).ToList()
         });
 
         await _publishEndpoint.Publish(new SendOrderConfirmationNotificationCommand
@@ -171,6 +199,20 @@ public class OrderService
         order.Cancel(reason);
         _orderRepository.Update(order);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        await _publishEndpoint.Publish(new OrderCancelledEvent
+        {
+            OrderId = order.Id,
+            CustomerId = order.CustomerId,
+            Reason = reason,
+            Items = order.Items.Select(i => new ContractOrderItemDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice
+            }).ToList()
+        });
 
         await _publishEndpoint.Publish(new SendOrderCancelledNotificationCommand
         {

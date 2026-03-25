@@ -4,4 +4,5 @@ public record OrderConfirmedEvent : IntegrationEvent
 {
     public Guid OrderId { get; init; }
     public Guid CustomerId { get; init; }
+    public List<OrderItemDto> Items { get; init; } = new();
 }

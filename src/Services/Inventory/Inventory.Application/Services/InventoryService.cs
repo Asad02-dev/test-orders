@@ -107,6 +107,50 @@ public class InventoryService
         });
     }
 
+    public async Task CommitReservationAsync(Guid orderId, List<CommitReservationItemRequest> items, CancellationToken ct)
+    {
+        if (items.Count == 0) return;
+
+        var productIds = items.Select(i => i.ProductId).ToList();
+        var inventoryItems = await _inventoryRepository.GetByProductIdsAsync(productIds, ct);
+
+        foreach (var reqItem in items)
+        {
+            var invItem = inventoryItems.FirstOrDefault(i => i.ProductId == reqItem.ProductId);
+            if (invItem is null)
+            {
+                continue;
+            }
+
+            invItem.CommitReservation(reqItem.Quantity);
+            _inventoryRepository.Update(invItem);
+        }
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task ReleaseReservationAsync(Guid orderId, List<ReleaseReservationItemRequest> items, CancellationToken ct)
+    {
+        if (items.Count == 0) return;
+
+        var productIds = items.Select(i => i.ProductId).ToList();
+        var inventoryItems = await _inventoryRepository.GetByProductIdsAsync(productIds, ct);
+
+        foreach (var reqItem in items)
+        {
+            var invItem = inventoryItems.FirstOrDefault(i => i.ProductId == reqItem.ProductId);
+            if (invItem is null)
+            {
+                continue;
+            }
+
+            invItem.ReleaseReservation(reqItem.Quantity);
+            _inventoryRepository.Update(invItem);
+        }
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
     private static InventoryItemDto MapToDto(Inventory.Domain.Entities.InventoryItem i) => new(
         i.Id, i.ProductId, i.ProductName,
         i.QuantityOnHand, i.QuantityReserved, i.AvailableQuantity,

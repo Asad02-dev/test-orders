@@ -22,6 +22,7 @@ var app = builder.Build();
 await app.Services.EnsureDatabaseCreatedAsync();
 
 app.UseRequestLogging();
+app.UseCorrelationId();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
