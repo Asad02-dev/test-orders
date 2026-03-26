@@ -1,0 +1,175 @@
+.dashboard-page {
+  padding: 2rem 0;
+}
+
+.welcome-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.stat-value-sm {
+  font-size: var(--font-size-xl, 1.25rem) !important;
+}
+
+.dashboard-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  .section-title {
+    margin-bottom: 0;
+  }
+}
+
+.section-link {
+  font-size: 0.875rem;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: none;
+  text-align: center;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.quick-action-icon {
+  font-size: 1.75rem;
+}
+
+.quick-action-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+  }
+
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color-light);
+  }
+
+  td {
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border-color-light);
+  }
+
+  .mono {
+    font-family: var(--font-family-mono, monospace);
+    font-size: 0.8125rem;
+  }
+}
+
+.low-stock-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.low-stock-card {
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--color-warning);
+}
+
+.low-stock-name {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.low-stock-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.low-stock-available {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}

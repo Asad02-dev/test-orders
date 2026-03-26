@@ -1,0 +1,235 @@
+<div class="order-detail-page">
+  <div class="container">
+    @if (loading()) {
+      <app-loading-spinner [overlay]="true" />
+    }
+
+    @if (error(); as errorMsg) {
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h2>Something went wrong</h2>
+        <p>{{ errorMsg }}</p>
+        <a routerLink="/orders" class="btn btn-primary">Back to Orders</a>
+      </div>
+    }
+
+    @if (order(); as order) {
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb">
+        <a routerLink="/orders" class="breadcrumb-link">Orders</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Order #{{ shortId() }}</span>
+      </nav>
+
+      <!-- Order Header -->
+      <div class="order-header card">
+        <div class="header-top">
+          <div class="header-info">
+            <h1 class="order-title">Order #{{ shortId() }}</h1>
+            <span class="order-date">Placed on {{ formatDate(order.createdAt) }}</span>
+          </div>
+          <app-status-badge [status]="order.status" type="order" />
+        </div>
+      </div>
+
+      <!-- Status Timeline -->
+      <div class="card timeline-card">
+        <h2 class="section-title">Order Progress</h2>
+        <div class="timeline">
+          @for (step of timelineSteps(); track step.label; let i = $index; let last = $last) {
+            <div class="timeline-step" [class]="'step-' + step.status">
+              <div class="step-indicator">
+                <div class="step-circle">
+                  @switch (step.status) {
+                    @case ('completed') {
+                      <svg viewBox="0 0 24 24" class="check-icon">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    }
+                    @case ('current') {
+                      <div class="pulse-dot"></div>
+                    }
+                    @case ('failed') {
+                      <svg viewBox="0 0 24 24" class="cross-icon">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    }
+                    @default {
+                      <div class="empty-dot"></div>
+                    }
+                  }
+                </div>
+                @if (!last) {
+                  <div class="step-connector"></div>
+                }
+              </div>
+              <span class="step-label">{{ step.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Content Grid -->
+      <div class="detail-grid">
+        <!-- Customer Info -->
+        <div class="card">
+          <h2 class="section-title">Customer Information</h2>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ order.customerEmail }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Shipping Address</span>
+            <span class="info-value">{{ order.shippingAddress || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Billing Address</span>
+            <span class="info-value">{{ order.billingAddress || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Payment Method</span>
+            <span class="info-value">{{ order.paymentMethod || '—' }}</span>
+          </div>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="card">
+          <h2 class="section-title">Payment Information</h2>
+          @if (paymentLoading()) {
+            <app-loading-spinner size="sm" />
+          } @else if (payment(); as payment) {
+            <div class="info-row">
+              <span class="info-label">Status</span>
+              <app-status-badge [status]="payment.status" type="payment" />
+            </div>
+            <div class="info-row">
+              <span class="info-label">Amount</span>
+              <span class="info-value">{{ payment.amount | currencyFormat }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Currency</span>
+              <span class="info-value">{{ payment.currency }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Date</span>
+              <span class="info-value">{{ formatDate(payment.createdAt) }}</span>
+            </div>
+            @if (payment.transactionId) {
+              <div class="info-row">
+                <span class="info-label">Transaction ID</span>
+                <span class="info-value mono">{{ payment.transactionId }}</span>
+              </div>
+            }
+            @if (payment.failureReason) {
+              <div class="info-row failure">
+                <span class="info-label">Failure Reason</span>
+                <span class="info-value">{{ payment.failureReason }}</span>
+              </div>
+            }
+          } @else {
+            <p class="text-muted">No payment information available.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="card">
+        <h2 class="section-title">Order Items</h2>
+        <div class="table-wrapper">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of order.items; track item.productId) {
+                <tr>
+                  <td>{{ item.productName }}</td>
+                  <td class="text-right">{{ item.unitPrice | currencyFormat }}</td>
+                  <td class="text-right">{{ item.quantity }}</td>
+                  <td class="text-right">{{ item.totalPrice | currencyFormat }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" class="text-right total-label">Order Total</td>
+                <td class="text-right total-value">{{ order.totalAmount | currencyFormat }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cancellation Section -->
+      @if (order.status === 'Cancelled' && order.cancellationReason) {
+        <div class="card cancellation-card">
+          <h2 class="section-title">Cancellation Details</h2>
+          <p class="cancellation-reason">{{ order.cancellationReason }}</p>
+        </div>
+      }
+
+      @if (canCancel()) {
+        <div class="card cancel-section">
+          @if (!showCancelForm()) {
+            <button class="btn btn-danger" (click)="openCancelDialog()">Cancel Order</button>
+          } @else {
+            <h2 class="section-title">Cancel This Order</h2>
+            <div class="cancel-form">
+              <div class="form-group">
+                <label for="cancelReason">Reason for cancellation</label>
+                <textarea
+                  id="cancelReason"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Please provide a reason for cancellation..."
+                  [ngModel]="cancelReason()"
+                  (ngModelChange)="cancelReason.set($event)"
+                ></textarea>
+              </div>
+              <div class="cancel-actions">
+                <button
+                  class="btn btn-danger"
+                  [disabled]="cancelling()"
+                  (click)="submitCancellation()"
+                >
+                  @if (cancelling()) {
+                    Cancelling...
+                  } @else {
+                    Confirm Cancellation
+                  }
+                </button>
+                <button class="btn btn-secondary" (click)="dismissCancelForm()">
+                  Nevermind
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Back Link -->
+      <div class="back-link">
+        <a routerLink="/orders" class="btn btn-secondary">← Back to Orders</a>
+      </div>
+
+      <!-- Cancel Confirm Dialog -->
+      @if (showCancelDialog()) {
+        <app-confirm-dialog
+          title="Cancel Order"
+          message="Are you sure you want to cancel this order? This action cannot be undone."
+          confirmText="Yes, Cancel Order"
+          cancelText="Keep Order"
+          type="danger"
+          (confirmed)="onCancelConfirmed()"
+          (cancelled)="onCancelDialogCancelled()"
+        />
+      }
+    }
+  </div>
+</div>
