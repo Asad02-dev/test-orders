@@ -22,19 +22,12 @@ builder.Services.AddOpenApi(options =>
                 Description = "Enter your Keycloak JWT token"
             }
         };
-        document.SecurityRequirements =
+        document.Security =
         [
             new Microsoft.OpenApi.OpenApiSecurityRequirement
             {
                 [
-                    new Microsoft.OpenApi.OpenApiSecurityScheme
-                    {
-                        Reference = new Microsoft.OpenApi.OpenApiReference
-                        {
-                            Id = "Bearer",
-                            Type = Microsoft.OpenApi.ReferenceType.SecurityScheme
-                        }
-                    }
+                    new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer", document, null)
                 ] = []
             }
         ];
