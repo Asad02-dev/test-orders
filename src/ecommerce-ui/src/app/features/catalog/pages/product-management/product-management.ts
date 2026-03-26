@@ -6,6 +6,7 @@ import { CatalogService } from '../../../../core/services/catalog.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ProductDto, CreateProductRequest, UpdateProductRequest } from '../../../../core/models';
 import { CurrencyFormatPipe } from '../../../../shared/pipes/currency-format.pipe';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -14,7 +15,7 @@ type FormMode = 'hidden' | 'create' | 'edit';
 @Component({
   selector: 'app-product-management',
   standalone: true,
-  imports: [FormsModule, AgGridAngular],
+  imports: [FormsModule, AgGridAngular, ConfirmDialogComponent],
   templateUrl: './product-management.html',
   styleUrl: './product-management.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +40,8 @@ export class ProductManagementComponent implements OnInit {
     imageUrl: '',
     isActive: true,
   });
+
+  readonly showDeleteConfirm = signal(false);
 
   readonly columnDefs: ColDef<ProductDto>[] = [
     { field: 'name', headerName: 'Name', flex: 2, minWidth: 150 },
@@ -190,11 +193,14 @@ export class ProductManagementComponent implements OnInit {
   }
 
   deactivateProduct(): void {
+    this.showDeleteConfirm.set(true);
+  }
+
+  confirmDelete(): void {
     const id = this.editingProductId();
     if (!id) return;
 
-    if (!confirm('Are you sure you want to delete this product?')) return;
-
+    this.showDeleteConfirm.set(false);
     this.catalogService.deleteProduct(id).subscribe({
       next: () => {
         this.toastService.success('Product deleted successfully!');
@@ -203,5 +209,9 @@ export class ProductManagementComponent implements OnInit {
       },
       error: () => this.toastService.error('Failed to delete product.'),
     });
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
   }
 }

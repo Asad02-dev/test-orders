@@ -113,4 +113,15 @@
       (rowClicked)="onRowClicked($event)"
     />
   </div>
+
+  @if (showDeleteConfirm()) {
+    <app-confirm-dialog
+      title="Delete Product"
+      message="Are you sure you want to delete this product? This action cannot be undone."
+      confirmText="Delete"
+      type="danger"
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
 </div>
