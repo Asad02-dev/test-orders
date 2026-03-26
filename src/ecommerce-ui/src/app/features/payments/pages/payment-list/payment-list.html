@@ -1,0 +1,107 @@
+<div class="container payment-page">
+  <div class="page-header">
+    <div>
+      <h1>💳 Payment Lookup</h1>
+      <p class="page-subtitle">Search for payment details by Order ID</p>
+    </div>
+  </div>
+
+  <!-- Search Section -->
+  <section class="card search-section animate-fadeInUp">
+    <div class="search-form">
+      <div class="search-bar search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input
+          class="form-control"
+          type="text"
+          placeholder="Enter Order ID to look up payment..."
+          [value]="searchOrderId()"
+          (input)="searchOrderId.set($any($event.target).value)"
+          (keyup.enter)="searchPayment()"
+        />
+      </div>
+      <button class="btn btn-primary" (click)="searchPayment()" [disabled]="loading()">
+        Search
+      </button>
+      @if (payment() || notFound()) {
+        <button class="btn btn-secondary" (click)="clearSearch()">Clear</button>
+      }
+    </div>
+  </section>
+
+  <!-- Recent Searches -->
+  @if (recentSearches().length > 0) {
+    <section class="recent-searches animate-fadeIn">
+      <h4 class="section-label">Recent Searches</h4>
+      <div class="recent-tags">
+        @for (search of recentSearches(); track search) {
+          <button class="recent-tag" (click)="searchFromHistory(search)">
+            {{ search }}
+          </button>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <app-loading-spinner size="lg" />
+  }
+
+  <!-- Payment Details -->
+  @if (payment(); as p) {
+    <section class="payment-details animate-fadeInUp">
+      <div class="card payment-card">
+        <div class="payment-card-header">
+          <h3>Payment Details</h3>
+          <app-status-badge [status]="p.status" type="payment" />
+        </div>
+        <div class="payment-info-grid">
+          <div class="payment-info-item">
+            <span class="info-label">Payment ID</span>
+            <span class="info-value mono">{{ p.id }}</span>
+          </div>
+          <div class="payment-info-item">
+            <span class="info-label">Order ID</span>
+            <span class="info-value mono">{{ p.orderId }}</span>
+          </div>
+          <div class="payment-info-item">
+            <span class="info-label">Amount</span>
+            <span class="info-value amount">{{ p.amount | currencyFormat: p.currency }}</span>
+          </div>
+          <div class="payment-info-item">
+            <span class="info-label">Payment Method</span>
+            <span class="info-value">{{ p.paymentMethod }}</span>
+          </div>
+          <div class="payment-info-item">
+            <span class="info-label">Transaction ID</span>
+            <span class="info-value mono">{{ p.transactionId ?? 'N/A' }}</span>
+          </div>
+          <div class="payment-info-item">
+            <span class="info-label">Created</span>
+            <span class="info-value">{{ p.createdAt | date: 'medium' }}</span>
+          </div>
+          <div class="payment-info-item">
+            <span class="info-label">Updated</span>
+            <span class="info-value">{{ p.updatedAt | date: 'medium' }}</span>
+          </div>
+          @if (p.failureReason) {
+            <div class="payment-info-item full-width">
+              <span class="info-label">Failure Reason</span>
+              <span class="info-value danger">{{ p.failureReason }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Not Found -->
+  @if (notFound() && !loading()) {
+    <app-empty-state
+      icon="🔍"
+      title="Payment not found"
+      message="No payment was found for the given Order ID. Please check and try again."
+    />
+  }
+</div>
