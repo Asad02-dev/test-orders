@@ -1,0 +1,116 @@
+<div class="container product-management-page">
+  <div class="page-header">
+    <h1 class="page-title">Product Management</h1>
+    <button class="btn btn-primary" (click)="openCreateForm()">+ Add Product</button>
+  </div>
+
+  @if (formMode() !== 'hidden') {
+    <div class="form-panel card">
+      <div class="form-panel-header">
+        <h2>{{ formMode() === 'create' ? 'Add New Product' : 'Edit Product' }}</h2>
+        <button class="btn" (click)="closeForm()">✕</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Name *</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="formData().name"
+            (ngModelChange)="updateField('name', $event)"
+            placeholder="Product name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select
+            class="form-control"
+            [ngModel]="formData().category"
+            (ngModelChange)="updateField('category', $event)"
+          >
+            <option value="" disabled>Select category</option>
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Price *</label>
+          <input
+            type="number"
+            class="form-control"
+            [ngModel]="formData().price"
+            (ngModelChange)="updateField('price', $event)"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Image URL</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="formData().imageUrl"
+            (ngModelChange)="updateField('imageUrl', $event)"
+            placeholder="https://..."
+          />
+        </div>
+
+        <div class="form-group form-group-full">
+          <label class="form-label">Description</label>
+          <textarea
+            class="form-control"
+            rows="3"
+            [ngModel]="formData().description"
+            (ngModelChange)="updateField('description', $event)"
+            placeholder="Product description"
+          ></textarea>
+        </div>
+
+        @if (formMode() === 'edit') {
+          <div class="form-group">
+            <label class="form-label">Active</label>
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                [ngModel]="formData().isActive"
+                (ngModelChange)="updateField('isActive', $event)"
+              />
+              {{ formData().isActive ? 'Active' : 'Inactive' }}
+            </label>
+          </div>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="saveProduct()">
+          {{ formMode() === 'create' ? 'Create Product' : 'Save Changes' }}
+        </button>
+        @if (formMode() === 'edit') {
+          <button class="btn btn-danger" (click)="deactivateProduct()">Delete</button>
+        }
+        <button class="btn" (click)="closeForm()">Cancel</button>
+      </div>
+    </div>
+  }
+
+  <div class="grid-container ag-theme-alpine">
+    <ag-grid-angular
+      [rowData]="products()"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      [pagination]="true"
+      [paginationPageSize]="20"
+      [paginationPageSizeSelector]="[10, 20, 50]"
+      [rowSelection]="'single'"
+      [animateRows]="true"
+      (gridReady)="onGridReady($event)"
+      (rowClicked)="onRowClicked($event)"
+    />
+  </div>
+</div>

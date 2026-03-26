@@ -1,0 +1,81 @@
+.product-management-page {
+  padding: 2rem 0;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+
+  .page-title {
+    margin: 0;
+  }
+}
+
+.form-panel {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  animation: scaleIn 0.3s ease-out;
+
+  .form-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.grid-container {
+  height: 500px;
+  width: 100%;
+}
+
+:host ::ng-deep {
+  .status-active {
+    color: var(--color-success, #22c55e);
+    font-weight: 600;
+  }
+
+  .status-inactive {
+    color: var(--color-danger, #ef4444);
+    font-weight: 600;
+  }
+}
