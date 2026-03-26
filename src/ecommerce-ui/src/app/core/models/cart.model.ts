@@ -28,9 +28,9 @@ export interface UpdateCartItemRequest {
 }
 
 export interface CartCheckoutRequest {
-  shippingAddress: string;
-  billingAddress: string;
-  paymentMethod: string;
+  customerName: string;
+  customerEmail: string;
+  idempotencyKey: string;
 }
 
 export interface CartCheckoutResponse {
