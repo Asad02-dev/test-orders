@@ -4,8 +4,8 @@ export const environment = {
   keycloak: {
     authority: 'http://localhost:8080/realms/ecommerce',
     clientId: 'ecommerce-spa',
-    redirectUri: 'http://localhost:4200',
-    postLogoutRedirectUri: 'http://localhost:4200',
+    redirectUri: 'http://localhost:4200/auth/callback',
+    postLogoutRedirectUri: 'http://localhost:4200/auth/login',
     scope: 'openid profile email',
   },
 };
