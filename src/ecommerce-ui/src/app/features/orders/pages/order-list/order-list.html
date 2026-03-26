@@ -1,0 +1,66 @@
+<div class="order-list-page">
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">My Orders</h1>
+    </div>
+
+    @if (loading()) {
+      <app-loading-spinner [overlay]="true" />
+    }
+
+    @if (isEmpty()) {
+      <app-empty-state
+        icon="📦"
+        title="No orders yet"
+        message="You haven't placed any orders. Start shopping to see your orders here."
+      >
+        <button class="btn btn-primary" (click)="browseProducts()">Browse Products</button>
+      </app-empty-state>
+    }
+
+    @if (!loading() && !isEmpty()) {
+      <div class="grid-controls">
+        <div class="page-size-control">
+          <label for="pageSize">Rows per page:</label>
+          <select id="pageSize" [value]="pageSize()" (change)="onPageSizeChange($event)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ag-theme-alpine grid-wrapper">
+        <ag-grid-angular
+          [rowData]="orders()"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [animateRows]="true"
+          [domLayout]="'autoHeight'"
+          (gridReady)="onGridReady($event)"
+        />
+      </div>
+
+      <div class="pagination">
+        <button
+          class="btn btn-outline"
+          [disabled]="!hasPreviousPage()"
+          (click)="previousPage()"
+        >
+          ← Previous
+        </button>
+        <span class="page-info">
+          Page {{ currentPage() }} of {{ totalPages() }}
+        </span>
+        <button
+          class="btn btn-outline"
+          [disabled]="!hasNextPage()"
+          (click)="nextPage()"
+        >
+          Next →
+        </button>
+      </div>
+    }
+  </div>
+</div>
