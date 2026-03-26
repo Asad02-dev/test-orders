@@ -1,0 +1,28 @@
+<div class="product-card card" (click)="onViewDetails()">
+  <div class="product-image">
+    @if (product().imageUrl) {
+      <img [src]="product().imageUrl" [alt]="product().name" loading="lazy" />
+    } @else {
+      <div class="image-placeholder">
+        <span>📦</span>
+      </div>
+    }
+    @if (product().category) {
+      <span class="product-category badge badge-info">{{ product().category }}</span>
+    }
+  </div>
+
+  <div class="product-body">
+    <h4 class="product-name">{{ product().name }}</h4>
+    @if (product().description) {
+      <p class="product-description">{{ product().description }}</p>
+    }
+  </div>
+
+  <div class="product-footer">
+    <span class="product-price">{{ product().price | currencyFormat }}</span>
+    <button class="btn btn-primary btn-sm" (click)="onAddToCart($event)">
+      Add to Cart
+    </button>
+  </div>
+</div>
