@@ -52,3 +52,13 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+/src/Gateway/Gateway.Api/.vs/Gateway.Api
+/.vs/ECommerce.slnx/FileContentIndex
+/src/Gateway/Gateway.Api/Gateway.Api.csproj.user
+/src/Services/Cart/Cart.Api/Cart.Api.csproj.user
+/src/Services/Catalog/Catalog.Api/Catalog.Api.csproj.user
+/src/Services/Inventory/Inventory.Api/Inventory.Api.csproj.user
+/src/Services/Notifications/Notifications.Api/Notifications.Api.csproj.user
+/src/Services/Orders/Orders.Api/Orders.Api.csproj.user
+/src/Services/Payments/Payments.Api/Payments.Api.csproj.user
+/.vs

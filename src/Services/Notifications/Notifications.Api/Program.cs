@@ -7,7 +7,40 @@ using Observability.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddObservability("notifications-api");
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Components ??= new();
+        document.Components.SecuritySchemes = new Dictionary<string, Microsoft.OpenApi.IOpenApiSecurityScheme>
+        {
+            ["Bearer"] = new Microsoft.OpenApi.OpenApiSecurityScheme
+            {
+                Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "Enter your Keycloak JWT token"
+            }
+        };
+        document.SecurityRequirements =
+        [
+            new Microsoft.OpenApi.OpenApiSecurityRequirement
+            {
+                [
+                    new Microsoft.OpenApi.OpenApiSecurityScheme
+                    {
+                        Reference = new Microsoft.OpenApi.OpenApiReference
+                        {
+                            Id = "Bearer",
+                            Type = Microsoft.OpenApi.ReferenceType.SecurityScheme
+                        }
+                    }
+                ] = []
+            }
+        ];
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddKeycloakAuthentication(builder.Configuration);
 builder.Services.AddNotificationsInfrastructure(builder.Configuration);
 builder.Services.AddHealthChecks()
@@ -24,7 +57,11 @@ app.UseCorrelationId();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-if (app.Environment.IsDevelopment()) app.MapOpenApi();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Notifications API"));
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

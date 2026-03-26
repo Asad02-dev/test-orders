@@ -11,7 +11,40 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddObservability("catalog-api");
 
 // OpenAPI
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Components ??= new();
+        document.Components.SecuritySchemes = new Dictionary<string, Microsoft.OpenApi.IOpenApiSecurityScheme>
+        {
+            ["Bearer"] = new Microsoft.OpenApi.OpenApiSecurityScheme
+            {
+                Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "Enter your Keycloak JWT token"
+            }
+        };
+        document.SecurityRequirements =
+        [
+            new Microsoft.OpenApi.OpenApiSecurityRequirement
+            {
+                [
+                    new Microsoft.OpenApi.OpenApiSecurityScheme
+                    {
+                        Reference = new Microsoft.OpenApi.OpenApiReference
+                        {
+                            Id = "Bearer",
+                            Type = Microsoft.OpenApi.ReferenceType.SecurityScheme
+                        }
+                    }
+                ] = []
+            }
+        ];
+        return Task.CompletedTask;
+    });
+});
 
 // Authentication
 builder.Services.AddKeycloakAuthentication(builder.Configuration);
@@ -39,6 +72,7 @@ app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Catalog API"));
 }
 
 app.UseAuthentication();
