@@ -8,7 +8,7 @@ export const authGuard: CanActivateFn = () => {
 
   return oidcService.isAuthenticated$.pipe(
     take(1),
-    map(({ isAuthenticated }) => {
+    map(({ isAuthenticated }: { isAuthenticated: boolean }) => {
       if (!isAuthenticated) {
         oidcService.authorize();
         return false;

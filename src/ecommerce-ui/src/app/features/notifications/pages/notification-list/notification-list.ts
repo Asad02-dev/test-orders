@@ -1,6 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
 import { AgGridAngular } from 'ag-grid-angular';
 import { AllCommunityModule, ModuleRegistry, ColDef, GridReadyEvent, RowClassParams } from 'ag-grid-community';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -14,7 +13,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 @Component({
   selector: 'app-notification-list',
   standalone: true,
-  imports: [FormsModule, AgGridAngular, LoadingSpinnerComponent, EmptyStateComponent, DatePipe],
+  imports: [FormsModule, AgGridAngular, LoadingSpinnerComponent, EmptyStateComponent],
   templateUrl: './notification-list.html',
   styleUrl: './notification-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -78,7 +77,7 @@ export class NotificationListComponent implements OnInit {
 
   loadStatus(): void {
     this.notificationService.getStatus().subscribe({
-      next: (res) => this.serviceStatus.set(res.status),
+      next: (res: { status: string }) => this.serviceStatus.set(res.status),
       error: () => this.serviceStatus.set('offline'),
     });
   }
@@ -87,7 +86,7 @@ export class NotificationListComponent implements OnInit {
     this.loading.set(true);
     this.searchOrderId.set('');
     this.notificationService.getNotifications(this.selectedCount()).subscribe({
-      next: (items) => {
+      next: (items: NotificationRecord[]) => {
         this.notifications.set(items);
         this.loading.set(false);
       },
@@ -112,7 +111,7 @@ export class NotificationListComponent implements OnInit {
 
     this.loading.set(true);
     this.notificationService.getNotificationsForOrder(orderId).subscribe({
-      next: (items) => {
+      next: (items: NotificationRecord[]) => {
         this.notifications.set(items);
         this.loading.set(false);
       },

@@ -39,7 +39,7 @@ export class ProductDetailComponent implements OnInit {
     }
 
     this.catalogService.getProduct(id).subscribe({
-      next: (product) => {
+      next: (product: ProductDto) => {
         this.product.set(product);
         this.loading.set(false);
       },

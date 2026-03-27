@@ -39,7 +39,7 @@ export class PaymentListComponent {
     this.notFound.set(false);
 
     this.paymentService.getPaymentByOrder(orderId).subscribe({
-      next: (payment) => {
+      next: (payment: PaymentDto) => {
         this.payment.set(payment);
         this.loading.set(false);
         this.addToRecentSearches(orderId);

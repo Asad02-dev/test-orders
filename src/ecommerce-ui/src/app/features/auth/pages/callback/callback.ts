@@ -41,7 +41,7 @@ export class CallbackComponent implements OnInit {
   private readonly router = inject(Router);
 
   ngOnInit(): void {
-    this.oidcService.checkAuth().subscribe(({ isAuthenticated }) => {
+    this.oidcService.checkAuth().subscribe(({ isAuthenticated }: { isAuthenticated: boolean }) => {
       if (isAuthenticated) {
         // Redirect to dashboard after successful authentication
         this.router.navigate(['/dashboard']);

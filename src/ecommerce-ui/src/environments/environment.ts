@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5100',
+  apiUrl: 'https://localhost:7141',
   keycloak: {
     authority: 'http://localhost:8080/realms/ecommerce',
     clientId: 'ecommerce-spa',

@@ -129,7 +129,7 @@ export class OrderDetailComponent implements OnInit {
   loadOrder(id: string): void {
     this.loading.set(true);
     this.orderService.getOrder(id).subscribe({
-      next: (order) => {
+      next: (order: OrderDto) => {
         this.order.set(order);
         this.loading.set(false);
         this.loadPayment(id);
@@ -144,7 +144,7 @@ export class OrderDetailComponent implements OnInit {
   loadPayment(orderId: string): void {
     this.paymentLoading.set(true);
     this.paymentService.getPaymentByOrder(orderId).subscribe({
-      next: (payment) => {
+      next: (payment: PaymentDto) => {
         this.payment.set(payment);
         this.paymentLoading.set(false);
       },
@@ -176,7 +176,7 @@ export class OrderDetailComponent implements OnInit {
 
     this.cancelling.set(true);
     this.orderService.cancelOrder(this.orderId(), reason).subscribe({
-      next: (updatedOrder) => {
+      next: (updatedOrder: OrderDto) => {
         this.order.set(updatedOrder);
         this.showCancelForm.set(false);
         this.cancelReason.set('');

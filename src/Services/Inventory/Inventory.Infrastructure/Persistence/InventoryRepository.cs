@@ -20,5 +20,5 @@ public class InventoryRepository : IInventoryRepository
     public async Task<IReadOnlyList<InventoryItem>> GetByProductIdsAsync(IEnumerable<Guid> productIds, CancellationToken ct = default)
         => await _context.InventoryItems.Where(i => productIds.Contains(i.ProductId)).ToListAsync(ct);
     public async Task<IReadOnlyList<InventoryItem>> GetLowStockItemsAsync(CancellationToken ct = default)
-        => await _context.InventoryItems.Where(i => i.AvailableQuantity <= i.ReorderThreshold).ToListAsync(ct);
+        => await _context.InventoryItems.Where(i => (i.QuantityOnHand - i.QuantityReserved) <= i.ReorderThreshold).ToListAsync(ct);
 }

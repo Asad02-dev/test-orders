@@ -87,7 +87,7 @@ export class InventoryManagementComponent implements OnInit {
     this.loading.set(true);
     // The inventory API only exposes getLowStock() for listing; individual items require a productId.
     this.inventoryService.getLowStock().subscribe({
-      next: (items) => {
+      next: (items: InventoryItemDto[]) => {
         this.inventoryItems.set(items);
         this.loading.set(false);
       },

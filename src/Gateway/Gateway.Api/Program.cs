@@ -12,7 +12,16 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration);
 
 // YARP Reverse Proxy
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .ConfigureHttpClient((context, handler) =>
+    {
+        // Accept the ASP.NET Core dev certificate for localhost HTTPS in development
+        if (builder.Environment.IsDevelopment())
+        {
+            handler.SslOptions.RemoteCertificateValidationCallback = (_, cert, _, _) =>
+                cert?.Subject?.Contains("localhost", StringComparison.OrdinalIgnoreCase) == true;
+        }
+    });
 
 // Health checks
 builder.Services.AddHealthChecks();

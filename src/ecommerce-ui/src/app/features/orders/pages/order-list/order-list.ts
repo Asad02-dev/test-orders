@@ -140,7 +140,7 @@ export class OrderListComponent implements OnInit {
   loadOrders(): void {
     this.loading.set(true);
     this.orderService.getOrders(this.currentPage(), this.pageSize()).subscribe({
-      next: (result) => {
+      next: (result: PagedResult<OrderDto>) => {
         this.pagedResult.set(result);
         this.loading.set(false);
       },

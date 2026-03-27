@@ -4,7 +4,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { AllCommunityModule, ModuleRegistry, ColDef, GridReadyEvent, RowClickedEvent } from 'ag-grid-community';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import { ProductDto, CreateProductRequest, UpdateProductRequest } from '../../../../core/models';
+import { ProductDto, CreateProductRequest, UpdateProductRequest, PagedResult } from '../../../../core/models';
 import { CurrencyFormatPipe } from '../../../../shared/pipes/currency-format.pipe';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
@@ -97,7 +97,7 @@ export class ProductManagementComponent implements OnInit {
   loadAllProducts(): void {
     this.loading.set(true);
     this.catalogService.getProducts(1, 1000).subscribe({
-      next: (result) => {
+      next: (result: PagedResult<ProductDto>) => {
         this.products.set(result.items);
         this.loading.set(false);
       },

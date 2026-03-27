@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, SlicePipe } from '@angular/common';
 import { forkJoin, catchError, of } from 'rxjs';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { OrderService } from '../../../../core/services/order.service';
 import { InventoryService } from '../../../../core/services/inventory.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { OrderDto, InventoryItemDto } from '../../../../core/models';
+import { OrderDto, InventoryItemDto, PagedResult } from '../../../../core/models';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner';
 import { CurrencyFormatPipe } from '../../../../shared/pipes/currency-format.pipe';
@@ -21,7 +21,7 @@ interface QuickAction {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, StatusBadgeComponent, LoadingSpinnerComponent, CurrencyFormatPipe],
+  imports: [RouterLink, DatePipe, SlicePipe, StatusBadgeComponent, LoadingSpinnerComponent, CurrencyFormatPipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,7 +66,7 @@ export class DashboardComponent implements OnInit {
       lowStock: this.inventoryService.getLowStock().pipe(catchError(() => of(null))),
       notifStatus: this.notificationService.getStatus().pipe(catchError(() => of(null))),
     }).subscribe({
-      next: (results) => {
+      next: (results: { products: PagedResult<{ totalCount: number }> | null; orders: PagedResult<OrderDto> | null; lowStock: InventoryItemDto[] | null; notifStatus: { status: string } | null }) => {
         this.totalProducts.set(results.products?.totalCount ?? null);
 
         if (results.orders) {

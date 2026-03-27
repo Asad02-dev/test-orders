@@ -57,7 +57,7 @@ export class ProductListComponent implements OnInit {
     const category = this.selectedCategory() === 'All' ? undefined : this.selectedCategory();
 
     this.catalogService.getProducts(this.currentPage(), this.pageSize, category).subscribe({
-      next: (result) => {
+      next: (result: PagedResult<ProductDto>) => {
         this.pagedResult.set(result);
         this.loading.set(false);
       },

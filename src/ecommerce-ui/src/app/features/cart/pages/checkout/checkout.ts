@@ -44,7 +44,7 @@ export class CheckoutComponent implements OnInit {
     if (!this.cart()) {
       this.loading.set(true);
       this.cartService.getCart().subscribe({
-        next: (cart) => {
+        next: (cart: import('../../../../core/models').CartDto) => {
           this.loading.set(false);
           if (!cart || cart.items.length === 0) {
             this.router.navigate(['/cart']);
@@ -88,7 +88,7 @@ export class CheckoutComponent implements OnInit {
         idempotencyKey: this.idempotencyKey,
       })
       .subscribe({
-        next: (response) => {
+        next: (response: import('../../../../core/models').CartCheckoutResponse) => {
           this.submitting.set(false);
           this.toastService.success('Order placed successfully!');
           this.router.navigate(['/orders', response.orderId]);

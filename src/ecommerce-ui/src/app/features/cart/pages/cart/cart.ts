@@ -49,7 +49,7 @@ export class CartComponent implements OnInit, OnDestroy {
     this.quantityUpdate$
       .pipe(
         debounceTime(400),
-        switchMap((req) => this.cartService.updateItem(req)),
+        switchMap((req: UpdateCartItemRequest) => this.cartService.updateItem(req)),
       )
       .subscribe({
         error: () => this.toastService.error('Failed to update quantity.'),
