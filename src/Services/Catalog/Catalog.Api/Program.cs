@@ -76,11 +76,11 @@ app.MapHealthChecks("/health");
 var products = app.MapGroup("/api/products").WithTags("Products");
 
 products.MapGet("/", async (
-    [FromQuery] int page,
-    [FromQuery] int pageSize,
     [FromQuery] string? category,
     ProductService productService,
-    CancellationToken ct) =>
+    CancellationToken ct,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 20) =>
 {
     if (page <= 0) page = 1;
     if (pageSize <= 0 || pageSize > 100) pageSize = 20;
