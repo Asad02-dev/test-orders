@@ -20,10 +20,18 @@ public class CatalogApiFactory : WebApplicationFactory<Program>
             services.RemoveAll(typeof(DbContextOptions<CatalogDbContext>));
             services.RemoveAll(typeof(CatalogDbContext));
 
-            // Add in-memory database
+            // Build a dedicated EF Core internal service provider with only InMemory
+            // to avoid conflicts with Npgsql registered by AddCatalogInfrastructure
+            var inMemoryServiceProvider = new ServiceCollection()
+                .AddEntityFrameworkInMemoryDatabase()
+                .BuildServiceProvider();
+
+            // Capture DB name outside the lambda so all requests in this test host share the same database
+            var dbName = "CatalogTestDb_" + Guid.NewGuid();
             services.AddDbContext<CatalogDbContext>(options =>
             {
-                options.UseInMemoryDatabase("CatalogTestDb_" + Guid.NewGuid());
+                options.UseInMemoryDatabase(dbName)
+                       .UseInternalServiceProvider(inMemoryServiceProvider);
             });
         });
     }
