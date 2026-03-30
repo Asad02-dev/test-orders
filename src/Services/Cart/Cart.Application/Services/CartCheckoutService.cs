@@ -1,5 +1,6 @@
 using Cart.Application.DTOs;
 using Cart.Domain.Repositories;
+using Microsoft.AspNetCore.Http;
 using SharedKernel.Common;
 using SharedKernel.Interfaces;
 using System.Net.Http.Json;
@@ -12,17 +13,20 @@ public class CartCheckoutService
     private readonly IUnitOfWork _unitOfWork;
     private readonly HttpClient _ordersHttpClient;
     private readonly CorrelationContext _correlationContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public CartCheckoutService(
         ICartRepository cartRepository,
         IUnitOfWork unitOfWork,
         HttpClient ordersHttpClient,
-        CorrelationContext correlationContext)
+        CorrelationContext correlationContext,
+        IHttpContextAccessor httpContextAccessor)
     {
         _cartRepository = cartRepository;
         _unitOfWork = unitOfWork;
         _ordersHttpClient = ordersHttpClient;
         _correlationContext = correlationContext;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<Result<CartCheckoutResponse>> CheckoutAsync(
@@ -52,6 +56,10 @@ public class CartCheckoutService
         using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/orders");
         requestMessage.Content = JsonContent.Create(placeOrderRequest);
         requestMessage.Headers.Add("X-Correlation-Id", _correlationContext.CorrelationId.ToString());
+
+        var authHeader = _httpContextAccessor.HttpContext?.Request.Headers.Authorization.ToString();
+        if (!string.IsNullOrEmpty(authHeader))
+            requestMessage.Headers.TryAddWithoutValidation("Authorization", authHeader);
 
         var response = await _ordersHttpClient.SendAsync(requestMessage, ct);
 

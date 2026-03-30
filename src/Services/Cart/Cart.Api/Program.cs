@@ -37,6 +37,7 @@ builder.Services.AddOpenApi(options =>
     });
 });
 builder.Services.AddKeycloakAuthentication(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddCartInfrastructure(builder.Configuration);
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<Cart.Infrastructure.Persistence.CartDbContext>("cart-db");

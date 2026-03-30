@@ -37,14 +37,16 @@ public class CartService
     public async Task<Result<CartDto>> AddItemAsync(Guid customerId, AddToCartRequest request, CancellationToken ct)
     {
         var cart = await _cartRepository.GetByCustomerIdAsync(customerId, ct);
-        if (cart is null)
+        var isNew = cart is null;
+        if (isNew)
         {
             cart = Cart.Domain.Entities.Cart.Create(customerId);
             await _cartRepository.AddAsync(cart, ct);
         }
 
         cart.AddItem(request.ProductId, request.ProductName, request.UnitPrice, request.Quantity);
-        _cartRepository.Update(cart);
+        if (!isNew)
+            _cartRepository.Update(cart);
         await _unitOfWork.SaveChangesAsync(ct);
 
         return Result.Success(MapToDto(cart));

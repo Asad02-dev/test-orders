@@ -20,7 +20,7 @@ public static class InfrastructureExtensions
         services.AddScoped<CartService>();
 
         var ordersBaseAddress = configuration["Services:OrdersApi"]
-            ?? "http://localhost:5103";
+            ?? "http://localhost:5189";
         services.AddHttpClient<CartCheckoutService>(client =>
         {
             client.BaseAddress = new Uri(ordersBaseAddress);
