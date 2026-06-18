@@ -1,0 +1,105 @@
+<div class="container dashboard-page">
+  <!-- Welcome Header -->
+  <div class="welcome-header animate-fadeInUp">
+    <h1>👋 Welcome back!</h1>
+    <p class="page-subtitle">{{ currentDate() | date: 'fullDate' }}</p>
+  </div>
+
+  @if (loading()) {
+    <app-loading-spinner size="lg" />
+  } @else {
+    <!-- Stats Cards -->
+    <section class="stats-row">
+      <div class="stat-card animate-fadeInUp" style="animation-delay: 0.05s">
+        <div class="stat-accent" style="background: var(--color-accent)"></div>
+        <div class="stat-icon" style="background: rgba(var(--color-accent-rgb), 0.1)">🛍️</div>
+        <div class="stat-value">{{ totalProducts() ?? 'N/A' }}</div>
+        <div class="stat-label">Total Products</div>
+      </div>
+      <div class="stat-card animate-fadeInUp" style="animation-delay: 0.1s">
+        <div class="stat-accent" style="background: var(--color-info)"></div>
+        <div class="stat-icon" style="background: rgba(76, 201, 240, 0.1)">📋</div>
+        <div class="stat-value">{{ totalOrders() ?? 'N/A' }}</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+      <div class="stat-card animate-fadeInUp" style="animation-delay: 0.15s">
+        <div class="stat-accent" style="background: var(--color-warning)"></div>
+        <div class="stat-icon" style="background: rgba(255, 209, 102, 0.15)">⚠️</div>
+        <div class="stat-value">{{ lowStockCount() ?? 'N/A' }}</div>
+        <div class="stat-label">Low Stock Items</div>
+      </div>
+      <div class="stat-card animate-fadeInUp" style="animation-delay: 0.2s">
+        <div class="stat-accent" style="background: var(--color-success)"></div>
+        <div class="stat-icon" style="background: rgba(6, 214, 160, 0.1)">🔔</div>
+        <div class="stat-value stat-value-sm">{{ notificationStatus() }}</div>
+        <div class="stat-label">Notification Service</div>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="dashboard-section animate-fadeInUp" style="animation-delay: 0.25s">
+      <h2 class="section-title">Quick Actions</h2>
+      <div class="quick-actions-grid">
+        @for (action of quickActions; track action.route) {
+          <button class="card quick-action-card" (click)="navigateTo(action.route)">
+            <span class="quick-action-icon">{{ action.icon }}</span>
+            <span class="quick-action-label">{{ action.label }}</span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <!-- Recent Orders -->
+    @if (recentOrders().length > 0) {
+      <section class="dashboard-section animate-fadeInUp" style="animation-delay: 0.3s">
+        <div class="section-header">
+          <h2 class="section-title">Recent Orders</h2>
+          <a routerLink="/orders" class="section-link">View All →</a>
+        </div>
+        <div class="card">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Status</th>
+                <th>Amount</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of recentOrders(); track order.id) {
+                <tr>
+                  <td class="mono">{{ order.id | slice: 0 : 8 }}…</td>
+                  <td><app-status-badge [status]="order.status" type="order" /></td>
+                  <td>{{ order.totalAmount | currencyFormat }}</td>
+                  <td>{{ order.createdAt | date: 'mediumDate' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <!-- Low Stock Alerts -->
+    @if (lowStockItems().length > 0) {
+      <section class="dashboard-section animate-fadeInUp" style="animation-delay: 0.35s">
+        <div class="section-header">
+          <h2 class="section-title">⚠️ Low Stock Alerts</h2>
+          <a routerLink="/inventory" class="section-link">View All →</a>
+        </div>
+        <div class="low-stock-cards">
+          @for (item of lowStockItems(); track item.id) {
+            <div class="card low-stock-card">
+              <div class="low-stock-name">{{ item.productName }}</div>
+              <div class="low-stock-stats">
+                <span class="low-stock-available">{{ item.quantityAvailable }} available</span>
+                <span class="badge badge-danger">Low Stock</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

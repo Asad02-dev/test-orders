@@ -1,0 +1,168 @@
+<div class="container inventory-page">
+  <div class="page-header">
+    <div>
+      <h1>📦 Inventory Management</h1>
+      <p class="page-subtitle">Monitor stock levels and manage inventory</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="toggleLowStockFilter()">
+        @if (showLowStockOnly()) {
+          Show All
+        } @else {
+          ⚠️ Low Stock Only
+        }
+      </button>
+      <button class="btn btn-primary" (click)="toggleAddForm()">
+        @if (showAddForm()) {
+          ✕ Cancel
+        } @else {
+          + Add Item
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Low Stock Alerts -->
+  @if (lowStockItems().length > 0) {
+    <section class="low-stock-alerts animate-fadeInUp">
+      <h3 class="section-title">⚠️ Low Stock Alerts ({{ lowStockItems().length }})</h3>
+      <div class="alert-cards">
+        @for (item of lowStockItems(); track item.id) {
+          <div class="alert-card">
+            <div class="alert-card-header">
+              <span class="alert-product-name">{{ item.productName }}</span>
+              <span class="badge badge-danger">Low Stock</span>
+            </div>
+            <div class="alert-card-body">
+              <div class="alert-stat">
+                <span class="alert-stat-label">Available</span>
+                <span class="alert-stat-value danger">{{ item.quantityAvailable }}</span>
+              </div>
+              <div class="alert-stat">
+                <span class="alert-stat-label">Threshold</span>
+                <span class="alert-stat-value">{{ item.reorderThreshold }}</span>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-primary" (click)="startRestock(item.id)">Restock</button>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Add Inventory Item Form -->
+  @if (showAddForm()) {
+    <section class="card add-form-panel animate-fadeInDown">
+      <h3>Add Inventory Item</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="productId">Product ID</label>
+          <input
+            id="productId"
+            class="form-control"
+            type="text"
+            placeholder="Enter product ID"
+            [value]="newItem().productId"
+            (input)="updateNewItem('productId', $any($event.target).value)"
+          />
+        </div>
+        <div class="form-group">
+          <label for="productName">Product Name</label>
+          <input
+            id="productName"
+            class="form-control"
+            type="text"
+            placeholder="Enter product name"
+            [value]="newItem().productName"
+            (input)="updateNewItem('productName', $any($event.target).value)"
+          />
+        </div>
+        <div class="form-group">
+          <label for="quantity">Quantity</label>
+          <input
+            id="quantity"
+            class="form-control"
+            type="number"
+            min="0"
+            [value]="newItem().quantityOnHand"
+            (input)="updateNewItem('quantityOnHand', +$any($event.target).value)"
+          />
+        </div>
+        <div class="form-group">
+          <label for="threshold">Reorder Threshold</label>
+          <input
+            id="threshold"
+            class="form-control"
+            type="number"
+            min="0"
+            [value]="newItem().reorderThreshold"
+            (input)="updateNewItem('reorderThreshold', +$any($event.target).value)"
+          />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="submitNewItem()">Create Item</button>
+        <button class="btn btn-secondary" (click)="toggleAddForm()">Cancel</button>
+      </div>
+    </section>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <app-loading-spinner size="lg" />
+  }
+
+  <!-- Inventory Grid -->
+  @if (!loading() && displayedItems().length > 0) {
+    <section class="inventory-grid-section animate-fadeInUp">
+      <div class="ag-theme-alpine grid-wrapper">
+        <ag-grid-angular
+          [rowData]="displayedItems()"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [animateRows]="true"
+          [pagination]="true"
+          [paginationPageSize]="20"
+          (gridReady)="onGridReady($event)"
+        />
+      </div>
+    </section>
+  }
+
+  @if (!loading() && displayedItems().length === 0) {
+    <app-empty-state
+      icon="📦"
+      title="No inventory items"
+      message="No inventory items found. Add items to get started."
+    />
+  }
+
+  <!-- Restock Modal -->
+  @if (restockingItemId()) {
+    <div class="restock-overlay" (click)="cancelRestock()">
+      <div class="restock-dialog card" (click)="$event.stopPropagation()">
+        <h3>Restock Item</h3>
+        @for (item of inventoryItems(); track item.id) {
+          @if (item.id === restockingItemId()) {
+            <p>Restocking: <strong>{{ item.productName }}</strong></p>
+            <div class="form-group">
+              <label for="restockQty">Quantity to Add</label>
+              <input
+                id="restockQty"
+                class="form-control"
+                type="number"
+                min="1"
+                [value]="restockQuantity()"
+                (input)="restockQuantity.set(+$any($event.target).value)"
+              />
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" (click)="submitRestock(item)">Confirm Restock</button>
+              <button class="btn btn-secondary" (click)="cancelRestock()">Cancel</button>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+</div>

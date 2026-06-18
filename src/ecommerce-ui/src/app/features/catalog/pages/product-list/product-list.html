@@ -1,0 +1,75 @@
+<div class="container product-list-page">
+  <div class="page-header">
+    <h1 class="page-title">Product Catalog</h1>
+    @if (!loading() && totalCount() > 0) {
+      <span class="product-count badge">{{ totalCount() }} products</span>
+    }
+  </div>
+
+  <div class="filters">
+    <div class="search-bar">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search products..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </div>
+    <div class="category-filter">
+      <select
+        class="form-control"
+        [ngModel]="selectedCategory()"
+        (ngModelChange)="onCategoryChange($event)"
+      >
+        @for (category of categories; track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <app-loading-spinner size="lg" />
+  } @else if (products().length === 0) {
+    <app-empty-state
+      icon="🛍️"
+      title="No products found"
+      message="Try adjusting your search or category filter."
+    />
+  } @else {
+    <div class="product-grid">
+      @for (product of products(); track product.id; let i = $index) {
+        <div class="product-grid-item" [style.animation-delay]="i * 50 + 'ms'">
+          <app-product-card
+            [product]="product"
+            (addToCart)="onAddToCart($event)"
+            (viewDetails)="onViewDetails($event)"
+          />
+        </div>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          class="btn btn-primary"
+          [disabled]="!hasPreviousPage()"
+          (click)="previousPage()"
+        >
+          Previous
+        </button>
+        <span class="page-info">
+          Page {{ currentPage() }} of {{ totalPages() }}
+        </span>
+        <button
+          class="btn btn-primary"
+          [disabled]="!hasNextPage()"
+          (click)="nextPage()"
+        >
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>

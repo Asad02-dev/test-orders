@@ -1,0 +1,84 @@
+<div class="container notification-page">
+  <div class="page-header">
+    <div>
+      <h1>🔔 Notifications</h1>
+      <p class="page-subtitle">View notification logs and service status</p>
+    </div>
+    <div class="status-indicator" [class.online]="serviceStatus() === 'Healthy' || serviceStatus() === 'Online'" [class.offline]="serviceStatus() !== 'Healthy' && serviceStatus() !== 'Online' && serviceStatus() !== 'unknown'">
+      <span class="status-dot"></span>
+      @if (serviceStatus() === 'Healthy' || serviceStatus() === 'Online') {
+        <span>Online</span>
+      } @else if (serviceStatus() === 'unknown') {
+        <span>Checking...</span>
+      } @else {
+        <span>Offline</span>
+      }
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <section class="controls-bar animate-fadeInUp">
+    <div class="control-group">
+      <label for="countSelect">Show</label>
+      <select
+        id="countSelect"
+        class="form-control count-select"
+        [value]="selectedCount()"
+        (change)="onCountChange(+$any($event.target).value)"
+      >
+        @for (c of counts; track c) {
+          <option [value]="c">{{ c }}</option>
+        }
+      </select>
+      <span>entries</span>
+    </div>
+    <div class="control-group search-group">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input
+          class="form-control"
+          type="text"
+          placeholder="Search by Order ID..."
+          [value]="searchOrderId()"
+          (input)="searchOrderId.set($any($event.target).value)"
+          (keyup.enter)="searchByOrderId()"
+        />
+      </div>
+      <button class="btn btn-primary" (click)="searchByOrderId()">Search</button>
+      @if (searchOrderId()) {
+        <button class="btn btn-secondary" (click)="loadNotifications()">Clear</button>
+      }
+    </div>
+  </section>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <app-loading-spinner size="lg" />
+  }
+
+  <!-- Grid -->
+  @if (!loading() && notifications().length > 0) {
+    <section class="grid-section animate-fadeInUp">
+      <div class="ag-theme-alpine grid-wrapper">
+        <ag-grid-angular
+          [rowData]="notifications()"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [animateRows]="true"
+          [pagination]="true"
+          [paginationPageSize]="selectedCount()"
+          [getRowClass]="getRowClass"
+          (gridReady)="onGridReady($event)"
+        />
+      </div>
+    </section>
+  }
+
+  @if (!loading() && notifications().length === 0) {
+    <app-empty-state
+      icon="🔔"
+      title="No notifications"
+      message="No notification records found."
+    />
+  }
+</div>

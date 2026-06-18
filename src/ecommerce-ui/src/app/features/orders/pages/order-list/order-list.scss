@@ -1,0 +1,121 @@
+.order-list-page {
+  animation: fadeIn 0.4s ease-out;
+  padding-block: var(--space-8);
+
+  .page-header {
+    margin-bottom: var(--space-6);
+
+    .page-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+  }
+
+  .grid-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: var(--space-4);
+
+    .page-size-control {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+
+      label {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+      }
+
+      select {
+        padding: var(--space-1) var(--space-3);
+        border: 1px solid var(--text-muted);
+        border-radius: 6px;
+        font-size: var(--font-size-sm);
+        background: var(--surface-card);
+        color: var(--text-primary);
+        cursor: pointer;
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-accent);
+        }
+      }
+    }
+  }
+
+  .grid-wrapper {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  :host ::ng-deep {
+    .btn-sm {
+      padding: var(--space-1) var(--space-3);
+      font-size: var(--font-size-xs);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-view {
+      background: var(--color-accent);
+      color: var(--text-inverse);
+      border: none;
+      font-weight: 500;
+
+      &:hover {
+        opacity: 0.85;
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+
+    .page-info {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .btn-outline {
+      padding: var(--space-2) var(--space-4);
+      border: 1px solid var(--text-muted);
+      background: var(--surface-card);
+      color: var(--text-primary);
+      border-radius: 8px;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

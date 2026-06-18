@@ -1,0 +1,125 @@
+.cart-page {
+  padding: 2rem 0;
+}
+
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--space-8);
+  align-items: start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cart-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  animation: fadeInUp 0.4s ease both;
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+
+  .item-name {
+    font-size: var(--font-size-md);
+    margin-bottom: var(--space-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-price {
+    font-size: var(--font-size-sm);
+  }
+}
+
+.item-quantity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+
+  .qty-btn {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    font-size: var(--font-size-md);
+    line-height: 1;
+  }
+
+  .qty-input {
+    width: 56px;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: var(--font-size-sm);
+    -moz-appearance: textfield;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+.item-total {
+  min-width: 90px;
+  text-align: right;
+  font-size: var(--font-size-md);
+}
+
+.remove-btn {
+  color: var(--color-danger);
+  font-size: var(--font-size-lg);
+
+  &:hover:not(:disabled) {
+    background: rgba(239, 71, 111, 0.08);
+    color: var(--color-danger-dark);
+  }
+}
+
+// Summary sidebar
+.cart-summary {
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-6));
+
+  @media (max-width: 1024px) {
+    position: static;
+  }
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+.summary-total {
+  font-size: var(--font-size-lg);
+
+  .total-price {
+    color: var(--color-accent);
+  }
+}
+
+.summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
