@@ -66,7 +66,7 @@ export class DashboardComponent implements OnInit {
       lowStock: this.inventoryService.getLowStock().pipe(catchError(() => of(null))),
       notifStatus: this.notificationService.getStatus().pipe(catchError(() => of(null))),
     }).subscribe({
-      next: (results: { products: PagedResult<{ totalCount: number }> | null; orders: PagedResult<OrderDto> | null; lowStock: InventoryItemDto[] | null; notifStatus: { status: string } | null }) => {
+      next: (results) => {
         this.totalProducts.set(results.products?.totalCount ?? null);
 
         if (results.orders) {
